@@ -42,7 +42,6 @@ def _main():
     num_val = int(len(lines)*val_split)
     num_train = len(lines) - num_val
 
-    """
     # Train with frozen layers first, to get a stable loss.
     # Adjust num epochs to your dataset. This step is enough to obtain a not bad model.
     if True:
@@ -71,10 +70,8 @@ def _main():
                 epochs=100,
                 initial_epoch=0, max_queue_size=1)
         model.save_weights(log_dir + 'trained_weights_stage_0.h5')
-    """
 
-    """ 
-        TODO on the GPU machines
+        #TODO on the GPU machines
         
         # train last layers with random augmented data
         model.compile(optimizer=Adam(lr=1e-3), loss={
@@ -93,7 +90,6 @@ def _main():
 
     # Unfreeze and continue training, to fine-tune.
     # Train longer if the result is not good.
-    """
 
     if True:
         for i in range(len(model.layers)):
