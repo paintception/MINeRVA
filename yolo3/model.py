@@ -10,6 +10,7 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.regularizers import l2
+from keras.models import load_model
 
 from yolo3.utils import compose
 
@@ -66,9 +67,24 @@ def make_last_layers(x, num_filters, out_filters):
             DarknetConv2D(out_filters, (1,1)))(x)
     return x, y
 
+def get_bayesian_yolo():
+    """
+    We return the model which is created by bayesian_yolo.py
+    The feature extractor is corresponds to the DarkNet model as done by YOLO-V3 with the main difference
+    that before the three prediction stages we add Dropout layers for investigating the uncertainty of the model
+    :return: a yolo-model with dropout layers
+    """
+
+    print('Returning YOLO-V3 with Dropout layers')
+    model = load_model('model_data/bayesian_yolo.h5')
+
+    return model
 
 def yolo_body(inputs, num_anchors, num_classes):
     """Create YOLO_V3 model CNN body in Keras."""
+
+    print('Returning original YOLO-V3 architecture')
+
     darknet = Model(inputs, darknet_body(inputs))
     x, y1 = make_last_layers(darknet.output, 512, num_anchors*(num_classes+5))
 
