@@ -4,12 +4,13 @@ Retrain the YOLO model for your own dataset.
 
 import numpy as np
 import keras.backend as K
-from keras.layers import Input, Lambda
+from keras.layers import Input, Lambda, Dropout
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.utils import plot_model
 
-from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss
+from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss, get_bayesian_yolo
 from yolo3.utils import get_random_data
 
 
@@ -21,6 +22,7 @@ def _main():
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
+    bayesian = True
 
     input_shape = (416,416) # multiple of 32, hw
 
@@ -30,9 +32,11 @@ def _main():
         model = create_tiny_model(input_shape, anchors, num_classes,
             freeze_body=2, weights_path='model_data/tiny_yolo_weights.h5')
     else:
-        print('Creating Full-YOLO')
-        model = create_model(input_shape, anchors, num_classes,
-            freeze_body=2, weights_path='model_data/yolo_weights.h5') # make sure you know what you freeze
+        model = create_model(input_shape, anchors, num_classes, bayesian=bayesian,
+            freeze_body=2, weights_path='model_data/yolo_weights.h5')
+
+        plot_model(model, 'yolo_model.png')
+        print('Image-Stored')
 
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
@@ -105,7 +109,7 @@ def get_anchors(anchors_path):
     return np.array(anchors).reshape(-1, 2)
 
 
-def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=2,
+def create_model(input_shape, anchors, num_classes, bayesian, load_pretrained=True, freeze_body=2,
             weights_path='model_data/yolo_weights.h5'):
     '''create the training model'''
     K.clear_session() # get a new session
@@ -116,8 +120,12 @@ def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze
     y_true = [Input(shape=(h//{0:32, 1:16, 2:8}[l], w//{0:32, 1:16, 2:8}[l], \
         num_anchors//3, num_classes+5)) for l in range(3)]
 
-    model_body = yolo_body(image_input, num_anchors//3, num_classes)
-    print('Create YOLOv3 model with {} anchors and {} classes.'.format(num_anchors, num_classes))
+    if bayesian:
+        model_body = get_bayesian_yolo()
+        print('Creating Bayesian-YOLOv3 model with {} anchors and {} classes.'.format(num_anchors, num_classes))
+    else:
+        print('Creating Standard-YOLOv3 model with {} anchors and {} classes.'.format(num_anchors, num_classes))
+        model_body = yolo_body(image_input, num_anchors//3, num_classes)
 
     if load_pretrained:
         model_body.load_weights(weights_path, by_name=True, skip_mismatch=True)
