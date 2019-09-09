@@ -5,6 +5,7 @@ Class definition of YOLO_v3 style detection model on image and video
 
 import colorsys
 import os
+import time
 from timeit import default_timer as timer
 
 import numpy as np
@@ -19,10 +20,10 @@ import os
 
 class YOLO(object):
     _defaults = {
-        "model_path": './logs/trained_weights_stage_0.h5',
-        "anchors_path": 'model_data/yolo_anchors.txt',
-        "classes_path":'./annotated_datasets/project_122386653_instruments.txt',
-        "score" : 0.05,
+        "model_path": './logs/ridim/trained_weights_final.h5',
+        "anchors_path": 'IconArt_yolo_anchors.txt',
+        "classes_path":'./annotated_datasets/IconArt_labels.txt',
+        "score" : 0.01,
         "iou" : 0.45,
         "model_image_size" : (416, 416),
         "gpu_num" : 1,
@@ -65,16 +66,21 @@ class YOLO(object):
         num_anchors = len(self.anchors)
         num_classes = len(self.class_names)
         is_tiny_version = num_anchors==6 # default setting
-        try:
-            self.yolo_model = load_model(model_path, compile=False)
+
+        self.yolo_model = yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
+        self.yolo_model.load_weights('./logs/full_trained_weights_final.h5')
+
+        """ 
         except:
             self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
                 if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-            self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
+            self.yolo_model.load_weights('./logs/trained_weights_stage_0.h5') # make sure model, anchors and classes match
+            print('LOADED')
         else:
             assert self.yolo_model.layers[-1].output_shape[-1] == \
                 num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
                 'Mismatch between model and given anchor and class sizes'
+        """
 
         print('{} model, anchors, and classes loaded.'.format(model_path))
 
@@ -99,7 +105,18 @@ class YOLO(object):
         return boxes, scores, classes
 
     def detect_image(self, image):
-        start = timer()
+        """
+        A modified function which does not only show the predictions of a trained yolo model but also
+        returns all the information that is necessary for computing the mAP wrt ground truth.
+        We now deal with multiple predictions on the same image.
+
+        :param image: an image coming from the testing-set
+        :return: the predicted_class, x_min, y_min, x_max, y_max and an image with the drawn bounding-boxes
+        """
+
+        detections = []
+        min_coordinates = []
+        max_coordinates = []
 
         if self.model_image_size != (None, None):
             assert self.model_image_size[0]%32 == 0, 'Multiples of 32 required'
@@ -143,14 +160,12 @@ class YOLO(object):
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-            print(label, (left, top), (right, bottom))
 
             if top - label_size[1] >= 0:
                 text_origin = np.array([left, top - label_size[1]])
             else:
                 text_origin = np.array([left, top + 1])
 
-            # My kingdom for a good redistributable image drawing library.
             for i in range(thickness):
                 draw.rectangle(
                     [left + i, top + i, right - i, bottom - i],
@@ -159,53 +174,16 @@ class YOLO(object):
                 [tuple(text_origin), tuple(text_origin + label_size)],
                 fill=self.colors[c])
             draw.text(text_origin, label, fill=(0, 0, 0), font=font)
+
+            detections.append(label)
+            min_coordinates.append((left, top))
+            max_coordinates.append((right, bottom))
+
             del draw
 
-        end = timer()
-        print(end - start)
-        return image
+        return detections, min_coordinates, max_coordinates, image
+
 
     def close_session(self):
         self.sess.close()
-
-def detect_video(yolo, video_path, output_path=""):
-    import cv2
-    vid = cv2.VideoCapture(video_path)
-    if not vid.isOpened():
-        raise IOError("Couldn't open webcam or video")
-    video_FourCC    = int(vid.get(cv2.CAP_PROP_FOURCC))
-    video_fps       = vid.get(cv2.CAP_PROP_FPS)
-    video_size      = (int(vid.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                        int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-    isOutput = True if output_path != "" else False
-    if isOutput:
-        print("!!! TYPE:", type(output_path), type(video_FourCC), type(video_fps), type(video_size))
-        out = cv2.VideoWriter(output_path, video_FourCC, video_fps, video_size)
-    accum_time = 0
-    curr_fps = 0
-    fps = "FPS: ??"
-    prev_time = timer()
-    while True:
-        return_value, frame = vid.read()
-        image = Image.fromarray(frame)
-        image = yolo.detect_image(image)
-        result = np.asarray(image)
-        curr_time = timer()
-        exec_time = curr_time - prev_time
-        prev_time = curr_time
-        accum_time = accum_time + exec_time
-        curr_fps = curr_fps + 1
-        if accum_time > 1:
-            accum_time = accum_time - 1
-            fps = "FPS: " + str(curr_fps)
-            curr_fps = 0
-        cv2.putText(result, text=fps, org=(3, 15), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.50, color=(255, 0, 0), thickness=2)
-        cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-        cv2.imshow("result", result)
-        if isOutput:
-            out.write(result)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-    yolo.close_session()
 
