@@ -18,13 +18,15 @@ from cytomine.models import AnnotationCollection
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-ANNOTATED_DATASETS = './annotated_datasets/'
-IMAGES_PATH = '/scratch/msabatelli/datasets/RIDIM_manual/'
+ANNOTATED_DATASETS_CSV = '../annotated_datasets/CSV/'
+ANNOTATED_DATASETS_TXT = '../annotated_datasets/TXT/'
 
-annotations_file = './annotation_files/annotations_file.csv'
+IMAGES_PATH = '/home/matthia/Documents/Datasets/KMSK/'
+
+annotations_file = '../annotation_files/KMSKAnnotations.csv'
 pat = re.compile(r'''(-*\d+\.\d+ -*\d+\.\d+);*''')
 
-df = pd.read_csv(annotations_file)
+df = pd.read_csv(annotations_file, sep=';')
 cols = [1,2,3,7,9,10]
 df.drop(df.columns[cols],axis=1,inplace=True)
 df['coordinates'] = ''
@@ -33,7 +35,8 @@ final_df = pd.DataFrame(columns=['Id', 'Image Id', 'Image Filename', 'Term', 'co
 
 if __name__ == '__main__':
 
-    id_project = '122386653'
+    id_project = '121964493'
+    id_name = 'KMSK'
 
     parser = ArgumentParser(prog="Cytomine Python client example")
 
@@ -87,7 +90,7 @@ if __name__ == '__main__':
         le = LabelEncoder()
         instruments = set(final_df['Term'].tolist())
 
-        with open(ANNOTATED_DATASETS + 'project_' + id_project + '_instruments.txt', 'w') as f:
+        with open(ANNOTATED_DATASETS_TXT + 'project_' + id_project + '_instruments.txt', 'w') as f:
             for item in instruments:
                 f.write("%s\n" % item)
 
@@ -104,9 +107,16 @@ if __name__ == '__main__':
         del final_df['coordinates']
         del final_df['Term']
 
-        training_set, testing_set = train_test_split(final_df, test_size=0.2)
-        training_set.to_csv(ANNOTATED_DATASETS + 'dataset_' + id_project + '_training_set.csv', index=False)
-        testing_set.to_csv(ANNOTATED_DATASETS + 'dataset_' + id_project + '_testing_set.csv', index=False)
+        final_df.to_csv(ANNOTATED_DATASETS_CSV + 'full_dataset_' + id_name + '.csv', index=False)
+        final_df.to_csv(ANNOTATED_DATASETS_CSV + 'tmp_dataset_' + id_name + '.txt', index=False, sep=' ')
 
-        training_set.to_csv(ANNOTATED_DATASETS + 'dataset_' + id_project + '_training_set.txt', index=False, sep=' ')
-        testing_set.to_csv(ANNOTATED_DATASETS + 'dataset_' + id_project + '_testing_set.txt', index=False, sep = ' ')
+        training_set, testing_set = train_test_split(final_df, test_size=0.2)
+        training_set.to_csv(ANNOTATED_DATASETS_CSV + 'dataset_' + id_name + '_training_set.csv', index=False)
+        testing_set.to_csv(ANNOTATED_DATASETS_CSV + 'dataset_' + id_name + '_testing_set.csv', index=False)
+
+        training_set.to_csv(ANNOTATED_DATASETS_TXT + 'dataset_' + id_name + '_training_set.txt', index=False, sep=' ')
+        testing_set.to_csv(ANNOTATED_DATASETS_TXT + 'dataset_' + id_name + '_testing_set.txt', index=False, sep = ' ')
+
+        with open(ANNOTATED_DATASETS_CSV + 'tmp_dataset_' + id_name + '.txt', 'r') as f, open(ANNOTATED_DATASETS_CSV + 'full_dataset_' + id_name + '.txt', 'w') as fo:
+            for line in f:
+                fo.write(line.replace('"', '').replace("'", ""))
