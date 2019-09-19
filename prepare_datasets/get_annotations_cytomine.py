@@ -18,9 +18,9 @@ from cytomine.models import AnnotationCollection
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-IMAGES_PATH = '/home/matthia/Documents/Datasets/KMSK/'
+IMAGES_PATH = '/home/matthia/Documents/Datasets/ODILE/'
 
-annotations_file = '../annotation_files/KMSKAnnotations.csv'
+annotations_file = '../annotation_files/OdileAnnotations.csv'
 pat = re.compile(r'''(-*\d+\.\d+ -*\d+\.\d+);*''')
 
 df = pd.read_csv(annotations_file, sep=';')
@@ -32,8 +32,8 @@ final_df = pd.DataFrame(columns=['Id', 'Image Id', 'Image Filename', 'Term', 'co
 
 if __name__ == '__main__':
 
-    id_project = '121964493'
-    id_name = 'KMSK'
+    id_project = '105442790'
+    id_name = 'Odile'
 
     annotated_datasets_csv = '../annotated_datasets/CSV/' + id_name + '/'
     annotated_datasets_txt = '../annotated_datasets/TXT/' + id_name + '/'
@@ -94,7 +94,8 @@ if __name__ == '__main__':
             for item in instruments:
                 f.write("%s\n" % item)
 
-        final_df['Term'] = le.fit_transform(final_df.Term.values.astype(str))
+        #final_df['Term'] = le.fit_transform(final_df.Term.values.astype(str))
+
         del final_df['Id']
         del final_df['Image Id']
         del final_df['Y']
@@ -103,9 +104,9 @@ if __name__ == '__main__':
         col2 = 'coordinates'
         final_df = final_df[[col1 if col == col2 else col2 if col == col1 else col for col in final_df.columns]]
 
-        final_df["merged"] = final_df["coordinates"].map(str) + final_df["Term"].map(str)
-        del final_df['coordinates']
-        del final_df['Term']
+        #final_df["merged"] = final_df["coordinates"].map(str) + final_df["Term"].map(str)
+        #del final_df['coordinates']
+        #del final_df['Term']
 
         final_df['Image Filename'] = final_df['Image Filename'].str.replace(" ","")
 
