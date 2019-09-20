@@ -2,7 +2,6 @@ import numpy as np
 
 
 class YOLO_Kmeans:
-
     def __init__(self, cluster_number, filename):
         self.cluster_number = cluster_number
         self.filename = filename
@@ -60,7 +59,7 @@ class YOLO_Kmeans:
         return clusters
 
     def result2txt(self, data, name):
-        f = open('./anchors/' + name + "_yolo_anchors.txt", 'w')
+        f = open('../anchors/' + name + "_yolo_anchors.txt", 'w')
         row = np.shape(data)[0]
         for i in range(row):
             if i == 0:
@@ -72,6 +71,7 @@ class YOLO_Kmeans:
 
     def txt2boxes(self):
         f = open(self.filename, 'r')
+        next(f)
         dataSet = []
         for line in f:
             infos = line.split(" ")
@@ -96,9 +96,12 @@ class YOLO_Kmeans:
             self.avg_iou(all_boxes, result) * 100))
 
 
-if __name__ == "__main__":
-    name = 'TinyDataset'
-    cluster_number = 9
-    filename = "./annotated_datasets/CSV/FullDataset/tiny_dataset.txt"
-    kmeans = YOLO_Kmeans(cluster_number, filename)
-    kmeans.txt2clusters(name)
+def prepare_anchors(dataset_name, n_clusters, ground_truth_file):
+    print('Generating Anchors .... ')
+    kmeans = YOLO_Kmeans(n_clusters, ground_truth_file)
+    kmeans.txt2clusters(dataset_name)
+    print('Anchor files is generated')
+
+if __name__ == '__main__':
+    annotation_datasets = '../annotated_datasets/CSV/'
+    prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt')
