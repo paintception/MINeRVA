@@ -11,6 +11,16 @@ columns =['Image Filename','coordinates','Term']
 dst = '/path/to/your/dataset'
 
 def get_full_dataset():
+    """
+    We load all the separate dataframes which have been retrieved from cytomine with: get_annotations_cytomine.py
+    Since each tiny-dataset has been labelled within its own cytomine project we have to re-gather everything separately
+    --> blame Eva for this.
+
+    :return: a dataframe with all the merged annotations which have been collected from cytomine.
+            we remove potential duplicates and the annotations which have been made for an instrument only once since
+            they can't be part of our training-testing splits.
+    """
+
     flickr = pd.read_csv(annotation_datasets + 'Flickr/full_dataset_Flickr.csv', error_bad_lines=False)
     kmkg = pd.read_csv(annotation_datasets + 'KMKG/full_dataset_KMKG.csv')
     kmsk = pd.read_csv(annotation_datasets + 'KMSK/full_dataset_KMSK.csv')
@@ -25,13 +35,15 @@ def get_full_dataset():
 
     return df
 
-def explore_original_dataset(df):
-    df['Term'].value_counts().plot('barh').invert_yaxis()
-    plt.title('Distribution of number of bounding boxes on a subset of instruments')
-    plt.xlabel('Bounding Box Occurences')
-    plt.show()
-
 def explore_training_and_testing_splits(training_df, testing_df):
+    """
+    Some exploratory plots which show us the distribution of the amount of bounding boxes that have been made fro each
+        instrument class. We check that the distribution matches between training and testing
+    :param training_df: the training-df
+    :param testing_df: the testing-df
+    :return: None
+    """
+
     training_df['Term'].value_counts().plot('barh').invert_yaxis()
     plt.title('Distribution of number of bounding boxes on a subset of instruments')
     plt.xlabel('Bounding Box Occurences')
@@ -42,12 +54,28 @@ def explore_training_and_testing_splits(training_df, testing_df):
     plt.show()
 
 def store_list_of_all_instruments(df, dataset_version):
+    """
+    YOLO and FastRCNN require a set of all instruments that need to be detected. We therefore extract this information
+    from the retrieved dataset and save it in a different file
+    :param df: the full dataset
+    :param dataset_version: a string which indicates which version of the dataset we are working with (full vs tiny)
+    :return: None
+    """
+
     instruments = set(df['Term'].tolist())
     with open(annotation_datasets + 'FullDataset/' + 'instruments_list/' + dataset_version + '_list_of_instruments.txt', 'w') as f:
         for item in instruments:
             f.write("%s\n" % item)
 
 def format_csv_to_txt(df):
+    """
+    Given a dataframe we need some processing in order to have it in a way which can be used by YOLO and FastRCNN.
+    This script performs some dummy transformations on the dataframe and returns a new version of it which matches with
+    what is required for training.
+
+    :param df: a dataframe
+    :return: a slighlty modified version of the same df
+    """
     coordinates = df['coordinates'].tolist()
     terms = df['Encoded-Term'].tolist()
     coordinates = [str(i) for i in coordinates]
@@ -67,6 +95,17 @@ def prepare_ground_truth_files(df):
         os.makedirs(ground_truth_path)
 
 def make_splits_tiny_dataset(df):
+    """
+    We create the official splits for our dataset, we reseve 80% for training while 20% for testing.
+    Here we deal with the 'tiny' version of our dataset, where we only keep the instruments which have been annotated
+    more than 25 times. The idea is to provide two different datasets, an 'easy' one and a 'harder' one.
+    We also store everything in a csv and txt file.
+
+    :param df: the full dataframe
+    :return: None
+    """
+
+
     tiny = df[df['Term'].isin(df['Term'].value_counts()[df['Term'].value_counts() > 25].index)]
     tiny['Image Filename'] = tiny['Image Filename'].apply(lambda x: x.replace(os.path.dirname(x), dst))
     store_list_of_all_instruments(tiny, 'tiny_version')
@@ -93,4 +132,4 @@ full_dataset = get_full_dataset()
 #explore_original_dataset(full_dataset)
 #make_splits_full_dataset(full_dataset)
 make_splits_tiny_dataset(full_dataset)
-kmeans.prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt')
+kmeans.prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors
