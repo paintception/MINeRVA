@@ -1,5 +1,5 @@
 import numpy as np
-
+import os
 
 class YOLO_Kmeans:
     def __init__(self, cluster_number, filename):
@@ -59,7 +59,11 @@ class YOLO_Kmeans:
         return clusters
 
     def result2txt(self, data, name):
-        f = open('../anchors/' + name + "_yolo_anchors.txt", 'w')
+        anchors_destination_path = '../annotated_datasets/CSV/FullDataset/Anchors/'
+        if not os.path.exists(anchors_destination_path):
+            os.makedirs(anchors_destination_path)
+
+        f = open(anchors_destination_path + name + "_yolo_anchors.txt", 'w')
         row = np.shape(data)[0]
         for i in range(row):
             if i == 0:
