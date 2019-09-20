@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import kmeans
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -34,7 +35,6 @@ def explore_training_and_testing_splits(training_df, testing_df):
     training_df['Term'].value_counts().plot('barh').invert_yaxis()
     plt.title('Distribution of number of bounding boxes on a subset of instruments')
     plt.xlabel('Bounding Box Occurences')
-    plt.show()
 
     testing_df['Term'].value_counts().plot('barh').invert_yaxis()
     plt.title('Distribution of number of bounding boxes on a subset of instruments')
@@ -47,36 +47,24 @@ def store_list_of_all_instruments(df, dataset_version):
         for item in instruments:
             f.write("%s\n" % item)
 
-def prepare_ground_truth_files(df):
-    ground_truth_path = annotation_datasets + 'FullDataset/GroundTruth/'
-    if not os.path.exists(ground_truth_path):
-        os.makedirs(ground_truth_path)
-
-    print(df.head(10))
-
-def make_splits_full_dataset(df):
-    le = LabelEncoder()  # We need a numerical encoding for each instrument
-    df['Term'] = le.fit_transform(df.Term.values.astype(str))
-    df['Image Filename'] = df['Image Filename'].apply(lambda x: x.replace(os.path.dirname(x), dst))  # change paths
+def format_csv_to_txt(df):
     coordinates = df['coordinates'].tolist()
-    terms = df['Term'].tolist()
+    terms = df['Encoded-Term'].tolist()
     coordinates = [str(i) for i in coordinates]
     terms = [str(i) for i in terms]
     full = [i + j for i, j in zip(coordinates, terms)]
 
     del df['Term']
+    del df['Encoded-Term']
     del df['coordinates']
-    df['full'] = full
+    df['coordinates_and_label'] = full
 
-    df.to_csv(annotation_datasets + 'FullDataset/' + 'full_dataset.csv', index=False, sep=' ')
-    df.to_csv(annotation_datasets + 'FullDataset/' + 'full_dataset.txt', index=False, sep=' ')
+    return df
 
-    training_set, testing_set = train_test_split(df, test_size=0.2)
-    training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_' + 'training_set.csv', index=False)
-    testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_' + 'testing_set.csv', index=False)
-
-    training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_' + 'training_set.txt', index=False, sep=' ')
-    testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_' + 'testing_set.txt', index=False, sep=' ')
+def prepare_ground_truth_files(df):
+    ground_truth_path = annotation_datasets + 'FullDataset/GroundTruth/'
+    if not os.path.exists(ground_truth_path):
+        os.makedirs(ground_truth_path)
 
 def make_splits_tiny_dataset(df):
     tiny = df[df['Term'].isin(df['Term'].value_counts()[df['Term'].value_counts() > 25].index)]
@@ -88,38 +76,21 @@ def make_splits_tiny_dataset(df):
 
     training_set, testing_set = train_test_split(tiny, test_size=0.2)
 
-    explore_training_and_testing_splits(training_set, testing_set)
+    #explore_training_and_testing_splits(training_set, testing_set)
 
     training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/'+  'tiny_dataset_' + 'training_set.csv', index=False)
     testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/'+ 'tiny_dataset_' + 'testing_set.csv', index=False)
 
-    coordinates = training_set['coordinates'].tolist()
-    terms = training_set['Encoded-Term'].tolist()
-    coordinates = [str(i) for i in coordinates]
-    terms = [str(i) for i in terms]
-    full = [i + j for i, j in zip(coordinates, terms)]
+    entire_dataset = format_csv_to_txt(tiny)
+    training_set = format_csv_to_txt(training_set)
+    testing_set = format_csv_to_txt(testing_set)
 
-    del training_set['Term']
-    del training_set['Encoded-Term']
-    del training_set['coordinates']
-    training_set['coordinates_and_label'] = full
-
+    entire_dataset.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt', index=False, sep=' ')
     training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'training_set.txt', index=False, sep=' ')
-
-    coordinates = testing_set['coordinates'].tolist()
-    terms = testing_set['Encoded-Term'].tolist()
-    coordinates = [str(i) for i in coordinates]
-    terms = [str(i) for i in terms]
-    full = [i + j for i, j in zip(coordinates, terms)]
-
-    del testing_set['Term']
-    del testing_set['Encoded-Term']
-    del testing_set['coordinates']
-    testing_set['coordinates_and_label'] = full
-
     testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'testing_set.txt', index=False, sep=' ')
 
 full_dataset = get_full_dataset()
 #explore_original_dataset(full_dataset)
 #make_splits_full_dataset(full_dataset)
 make_splits_tiny_dataset(full_dataset)
+kmeans.prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt')
