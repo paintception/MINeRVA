@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 annotation_datasets = '../annotated_datasets/CSV/'
 columns =['Image Filename','coordinates','Term']
-dst = '/home/matthia/Documents/Datasets/InstrumentsFullCollection'
+dst = '/path/to/your/dataset'
 
 def get_full_dataset():
     flickr = pd.read_csv(annotation_datasets + 'Flickr/full_dataset_Flickr.csv', error_bad_lines=False)
@@ -30,11 +30,29 @@ def explore_original_dataset(df):
     plt.xlabel('Bounding Box Occurences')
     plt.show()
 
+def explore_training_and_testing_splits(training_df, testing_df):
+    training_df['Term'].value_counts().plot('barh').invert_yaxis()
+    plt.title('Distribution of number of bounding boxes on a subset of instruments')
+    plt.xlabel('Bounding Box Occurences')
+    plt.show()
+
+    testing_df['Term'].value_counts().plot('barh').invert_yaxis()
+    plt.title('Distribution of number of bounding boxes on a subset of instruments')
+    plt.xlabel('Bounding Box Occurences')
+    plt.show()
+
 def store_list_of_all_instruments(df, dataset_version):
     instruments = set(df['Term'].tolist())
     with open(annotation_datasets + 'FullDataset/' + 'instruments_list/' + dataset_version + '_list_of_instruments.txt', 'w') as f:
         for item in instruments:
             f.write("%s\n" % item)
+
+def prepare_ground_truth_files(df):
+    ground_truth_path = annotation_datasets + 'FullDataset/GroundTruth/'
+    if not os.path.exists(ground_truth_path):
+        os.makedirs(ground_truth_path)
+
+    print(df.head(10))
 
 def make_splits_full_dataset(df):
     le = LabelEncoder()  # We need a numerical encoding for each instrument
@@ -62,36 +80,44 @@ def make_splits_full_dataset(df):
 
 def make_splits_tiny_dataset(df):
     tiny = df[df['Term'].isin(df['Term'].value_counts()[df['Term'].value_counts() > 25].index)]
+    tiny['Image Filename'] = tiny['Image Filename'].apply(lambda x: x.replace(os.path.dirname(x), dst))
     store_list_of_all_instruments(tiny, 'tiny_version')
 
-    tiny['Term'].value_counts().plot('barh').invert_yaxis()
-    plt.title('Distribution of number of bounding boxes on a subset of instruments')
-    plt.xlabel('Bounding Box Occurences')
-    plt.show()
-
     le = LabelEncoder()
-    tiny['Term'] = le.fit_transform(tiny.Term.values.astype(str))
-    tiny['Image Filename'] = tiny['Image Filename'].apply(lambda x: x.replace(os.path.dirname(x), dst))  # change paths
-    coordinates = tiny['coordinates'].tolist()
-    terms = tiny['Term'].tolist()
+    tiny['Encoded-Term'] = le.fit_transform(tiny.Term.values.astype(str))
+
+    training_set, testing_set = train_test_split(tiny, test_size=0.2)
+
+    explore_training_and_testing_splits(training_set, testing_set)
+
+    training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/'+  'tiny_dataset_' + 'training_set.csv', index=False)
+    testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/'+ 'tiny_dataset_' + 'testing_set.csv', index=False)
+
+    coordinates = training_set['coordinates'].tolist()
+    terms = training_set['Encoded-Term'].tolist()
     coordinates = [str(i) for i in coordinates]
     terms = [str(i) for i in terms]
     full = [i + j for i, j in zip(coordinates, terms)]
 
-    del tiny['Term']
-    del tiny['coordinates']
-    tiny['full'] = full
-
-    tiny.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'full_tiny_dataset.csv', index=False, sep=' ')
-    tiny.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'full_tiny_dataset.txt', index=False, sep=' ')
-
-    training_set, testing_set = train_test_split(tiny, test_size=0.2)
-    training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/'+  'tiny_dataset_' + 'training_set.csv', index=False)
-    testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/'+ 'tiny_dataset_' + 'testing_set.csv', index=False)
+    del training_set['Term']
+    del training_set['Encoded-Term']
+    del training_set['coordinates']
+    training_set['coordinates_and_label'] = full
 
     training_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'training_set.txt', index=False, sep=' ')
-    testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'testing_set.txt', index=False, sep=' ')
 
+    coordinates = testing_set['coordinates'].tolist()
+    terms = testing_set['Encoded-Term'].tolist()
+    coordinates = [str(i) for i in coordinates]
+    terms = [str(i) for i in terms]
+    full = [i + j for i, j in zip(coordinates, terms)]
+
+    del testing_set['Term']
+    del testing_set['Encoded-Term']
+    del testing_set['coordinates']
+    testing_set['coordinates_and_label'] = full
+
+    testing_set.to_csv(annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'testing_set.txt', index=False, sep=' ')
 
 full_dataset = get_full_dataset()
 #explore_original_dataset(full_dataset)
