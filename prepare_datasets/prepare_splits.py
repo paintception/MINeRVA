@@ -89,7 +89,7 @@ def format_csv_to_txt(df):
 
     return df
 
-def prepare_ground_truth_files(df):
+def prepare_ground_truth_files(testing_df):
     ground_truth_path = annotation_datasets + 'FullDataset/GroundTruth/'
     if not os.path.exists(ground_truth_path):
         os.makedirs(ground_truth_path)
@@ -104,7 +104,6 @@ def make_splits_tiny_dataset(df):
     :param df: the full dataframe
     :return: None
     """
-
 
     tiny = df[df['Term'].isin(df['Term'].value_counts()[df['Term'].value_counts() > 25].index)]
     tiny['Image Filename'] = tiny['Image Filename'].apply(lambda x: x.replace(os.path.dirname(x), dst))
@@ -132,4 +131,5 @@ full_dataset = get_full_dataset()
 #explore_original_dataset(full_dataset)
 #make_splits_full_dataset(full_dataset)
 make_splits_tiny_dataset(full_dataset)
+kmeans.prepare_anchors('tiny_version', 6, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors
 kmeans.prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors

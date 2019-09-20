@@ -97,10 +97,16 @@ class YOLO_Kmeans:
 
 
 def prepare_anchors(dataset_name, n_clusters, ground_truth_file):
-    print('Generating Anchors .... ')
-    kmeans = YOLO_Kmeans(n_clusters, ground_truth_file)
-    kmeans.txt2clusters(dataset_name)
-    print('Anchor files is generated')
+    if n_clusters == 6:
+        print('Generating Tiny Anchors .... ')
+        kmeans = YOLO_Kmeans(n_clusters, ground_truth_file)
+        kmeans.txt2clusters(dataset_name + '_tiny_yolo')
+        print('Anchor files is generated')
+    if n_clusters == 9:
+        print('Generating Full Anchors .... ')
+        kmeans = YOLO_Kmeans(n_clusters, ground_truth_file)
+        kmeans.txt2clusters(dataset_name + '_full_yolo')
+        print('Anchor files is generated')
 
 if __name__ == '__main__':
     annotation_datasets = '../annotated_datasets/CSV/'
