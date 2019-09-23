@@ -20,7 +20,7 @@ import os
 
 class YOLO(object):
     _defaults = {
-        "model_path": './logs/ridim/trained_weights_final.h5',
+        "model_path": './model_data/yolo_weights.h5',
         "anchors_path": '../annotated_datasets/CSV/MusicInArt/Anchors/tiny_version_full_yolo_yolo_anchors.txt',
         "classes_path":'./annotated_datasets/CSV/MusicInArt/instruments_list/tiny_version_list_of_instruments.txt',
         "score" : 0.1,
