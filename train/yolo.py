@@ -106,7 +106,7 @@ class YOLO(object):
     def detect_image(self, image):
         """
         A modified function which does not only show the predictions of a trained yolo model but also
-        returns all the information that is necessary for computing the mAP wrt ground truth.
+        returns all the information that is necessary for computing the mAP wrt ground truth files.
         We now deal with multiple predictions on the same image.
 
         :param image: an image coming from the testing-set
