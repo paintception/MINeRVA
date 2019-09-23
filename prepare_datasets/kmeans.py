@@ -114,4 +114,5 @@ def prepare_anchors(dataset_name, n_clusters, ground_truth_file):
 
 if __name__ == '__main__':
     annotation_datasets = '../annotated_datasets/CSV/'
-    prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt')
+    prepare_anchors('tiny_version', 6, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt')  # get anchors for tiny-yolo
+    prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors for YOLOv3

@@ -18,9 +18,9 @@ from cytomine.models import AnnotationCollection
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-IMAGES_PATH = '/home/matthia/Documents/Datasets/ODILE/'
+IMAGES_PATH = '/home/matthia/Documents/Datasets/RIDIM_2/'
 
-annotations_file = '../annotation_files/OdileAnnotations.csv'
+annotations_file = '../annotation_files/Ridim2Annotations.csv'
 pat = re.compile(r'''(-*\d+\.\d+ -*\d+\.\d+);*''')
 
 df = pd.read_csv(annotations_file, sep=';')
@@ -32,8 +32,8 @@ final_df = pd.DataFrame(columns=['Id', 'Image Id', 'Image Filename', 'Term', 'co
 
 if __name__ == '__main__':
 
-    id_project = '105442790'
-    id_name = 'Odile'
+    id_project = '125386343'
+    id_name = 'RIDIM2'
 
     annotated_datasets_csv = '../annotated_datasets/CSV/' + id_name + '/'
     annotated_datasets_txt = '../annotated_datasets/TXT/' + id_name + '/'

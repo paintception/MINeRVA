@@ -39,7 +39,7 @@ def get_full_dataset():
     if not os.path.isfile(annotation_datasets + '/FullDataset/MusicArtFullDataset.csv'):
         IMAGES = '/home/matthia/Documents/Datasets/InstrumentsFullCollection/'
         DESTINATION = annotation_datasets + 'FullDataset/MusicInArt/'
-        path_regex = '^(/[^/ ]*)+/?$'
+        path_regex = '^(/[^/ ]*)+/?$'   # used for deleting files which are on my laptop but have not been annotated
 
         if not os.path.exists(DESTINATION):
             os.makedirs(DESTINATION)
@@ -171,5 +171,5 @@ full_dataset = get_full_dataset()
 #explore_original_dataset(full_dataset)
 #make_splits_full_dataset(full_dataset)
 make_splits_tiny_dataset(full_dataset)
-kmeans.prepare_anchors('tiny_version', 6, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors
-kmeans.prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors
+kmeans.prepare_anchors('tiny_version', 6, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors for tiny-yolo
+kmeans.prepare_anchors('tiny_version', 9, annotation_datasets + 'FullDataset/' + 'dataset_splits/' + 'tiny_dataset_' + 'complete_set.txt') # get anchors for YOLOV3
