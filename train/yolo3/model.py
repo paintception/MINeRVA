@@ -76,7 +76,7 @@ def get_bayesian_yolo():
     """
 
     print('Returning YOLO-V3 with Dropout layers')
-    model = load_model('model_data/bayesian_yolo.h5')
+    model = load_model('../model_data/bayesian_yolo.h5')
 
     return model
 
