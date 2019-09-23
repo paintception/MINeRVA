@@ -68,7 +68,7 @@ class YOLO(object):
         is_tiny_version = num_anchors==6 # default setting
 
         self.yolo_model = yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-        self.yolo_model.load_weights('./logs/full_trained_weights_final.h5')
+        self.yolo_model.load_weights('../logs/full_trained_weights_final.h5')
 
         """ 
         except:
@@ -141,7 +141,7 @@ class YOLO(object):
 
         print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
 
-        font = ImageFont.truetype(font='font/FiraMono-Medium.otf',
+        font = ImageFont.truetype(font='../font/FiraMono-Medium.otf',
                     size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         thickness = (image.size[0] + image.size[1]) // 300
 
