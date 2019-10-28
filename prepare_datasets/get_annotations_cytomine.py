@@ -57,7 +57,7 @@ if __name__ == '__main__':
             d[term.id] = term.name
 
         for image in images:
-            print('Analyzing Image: ', image.filename)
+            print('Analyzing Image: ', image.id)
             #image.download(os.path.join(STORING_PATH, str(params.id_project), "{originalFilename}"))
 
             annotations = AnnotationCollection()
@@ -70,10 +70,11 @@ if __name__ == '__main__':
             annotations.fetch()
 
             for annotation in annotations:
-                #print(annotation.term[0])
                 matches = pat.findall(annotation.location)
     
                 if matches:
+                    print(d[annotation.term[0]])
+
                     lst = [tuple(map(float, m.split())) for m in matches]
     
                     poly = geometry.Polygon(lst)
