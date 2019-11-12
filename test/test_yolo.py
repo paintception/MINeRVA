@@ -9,46 +9,40 @@ This is important for computing the mAP once a similar file with the ground trut
 https://github.com/Cartucho/mAP and done in the pascal-VOCO-2012 challenge
 """
 
-import glob
 import os
 import argparse
 from yolo import YOLO
 from PIL import Image
 
-#DATASET_NAME = 'RIDIM'
-
 DATASET_NAME = 'IconArt'
 
-IMAGES = './IconArt_v1/JPEGImages/*.jpg'
-#IMAGES = '/ridim_images/*.jpeg'
+IMAGES = './testing_set_tiny_MIA/'
 
-DETECTION_RESULTS ='./MAP_results/yolo_predictions/'
+DETECTION_RESULTS ='./yolo_detections/' + DATASET_NAME + '/'
 DETECTED_IMAGES = './Images/' + DATASET_NAME + '/'
 
 if not os.path.exists(DETECTED_IMAGES):
     os.makedirs(DETECTED_IMAGES)
 
+if not os.path.exists(DETECTION_RESULTS):
+    os.makedirs(DETECTION_RESULTS)
+
 def detect_img(yolo):
-    images = glob.glob(IMAGES)
-    for img in images[50:]:
+    for img in os.listdir(IMAGES):
         base = os.path.basename(img)
         tmp_filename = os.path.splitext(base)[0]
 
-        try:
-            image = Image.open(img)
-            results = yolo.detect_image(image)
-            filename = DETECTION_RESULTS + tmp_filename + '.txt'
+        image = Image.open(IMAGES + img)
+        results = yolo.detect_image(image)
+        filename = DETECTION_RESULTS + tmp_filename + '.txt'
 
-            with open(filename, 'w') as f:
-                for class_name, min_coord, max_coord in zip(*results[:3]):
-                    f.write("%s " % class_name)
-                    f.write("%s " % str(min_coord)[1:-1].replace(',',''))
-                    f.write("%s \n" % str(max_coord)[1:-1].replace(',',''))
+        with open(filename, 'w') as f:
+            for class_name, min_coord, max_coord in zip(*results[:3]):
+                f.write("%s " % class_name)
+                f.write("%s " % str(min_coord)[1:-1].replace(',',''))
+                f.write("%s \n" % str(max_coord)[1:-1].replace(',',''))
 
-            results[3].save(DETECTED_IMAGES + 'detections_' + tmp_filename + '.jpg')
-
-        except:
-            pass
+        results[3].save(DETECTED_IMAGES + 'detections_' + tmp_filename + '.jpg')
 
     yolo.close_session()
 

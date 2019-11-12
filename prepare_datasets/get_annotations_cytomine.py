@@ -8,119 +8,86 @@ from pprint import pprint
 import logging
 import sys
 import re
-import csv
-from argparse import ArgumentParser
+import time
+import urllib
 from shapely import geometry
+
 import os
 import pandas as pd
 from cytomine import Cytomine
-from cytomine.models import AnnotationCollection
+
+from cytomine.models import AnnotationCollection, ImageInstanceCollection, TermCollection
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 
-IMAGES_PATH = '/home/matthia/Documents/Datasets/RIDIM_2/'
-
-annotations_file = '../annotation_files/Ridim2Annotations.csv'
+STORING_PATH = "/home/matthia/Desktop/MusicInArt/"  # the annotated images coming from cytomine
+CROPS_PATH = "/home/matthia/Desktop/MusicInArtCrops/"   # the crops which can be used for the classification experiments
 pat = re.compile(r'''(-*\d+\.\d+ -*\d+\.\d+);*''')
-
-df = pd.read_csv(annotations_file, sep=';')
-cols = [1,2,3,7,9,10]
-df.drop(df.columns[cols],axis=1,inplace=True)
-df['coordinates'] = ''
-
-final_df = pd.DataFrame(columns=['Id', 'Image Id', 'Image Filename', 'Term', 'coordinates'])
 
 if __name__ == '__main__':
 
-    id_project = '125386343'
-    id_name = 'RIDIM2'
+    # Nikolay you can append everything in here if you want
+    df = pd.DataFrame(columns = ['image_filename', 'bounding_box_coordinates',
+                                 'instrument_name', 'area_of_bounding_box'])
+    d = {}
 
-    annotated_datasets_csv = '../annotated_datasets/CSV/' + id_name + '/'
-    annotated_datasets_txt = '../annotated_datasets/TXT/' + id_name + '/'
+    host = 'research.cytomine.be'
 
-    parser = ArgumentParser(prog="Cytomine Python client example")
+    id_project = '125386343' #'130917744', '119921990', '121964493', '122386653', '105442790' # run this script for each of these ids separately
+    public_key = 'ee8335d9-ae0a-4368-b61b-719d33543523'
+    private_key = '442903ae-4cee-4546-8ab7-4ed3404f8b94'
 
-    # Cytomine
-    parser.add_argument('--cytomine_host', dest='host',
-                        default='demo.cytomine.be', help="The Cytomine host")
-    parser.add_argument('--cytomine_public_key', dest='public_key',
-                        default='ee8335d9-ae0a-4368-b61b-719d33543523',
-                        help="The Cytomine public key")
-    parser.add_argument('--cytomine_private_key', dest='private_key',
-                        default='442903ae-4cee-4546-8ab7-4ed3404f8b94',
-                        help="The Cytomine private key")
-    parser.add_argument('--cytomine_id_project', dest='id_project',
-                        default=id_project,
-                        help="The project from which we want the crop")
-    parser.add_argument('--download_path', default='/home/matthia/Desktop/annotations/', required=False,
-                        help="Where to store images")
-    params, other = parser.parse_known_args(sys.argv[1:])
-
-    with Cytomine(host=params.host, public_key=params.public_key, private_key=params.private_key,
+    with Cytomine(host=host, public_key=public_key, private_key=private_key,
                   verbose=logging.INFO) as cytomine:
-        annotations = AnnotationCollection()
-        annotations.project = params.id_project
-        annotations.showWKT = True
-        annotations.showMeta = True
-        annotations.showGIS = True
-        annotations.fetch()
 
-        for annotation in annotations:
-            n = df.loc[df['Image Id'] == annotation.image]
-            n['coordinates'] = ''
-            matches = pat.findall(annotation.location)
+        images = ImageInstanceCollection().fetch_with_filter("project", id_project)
+        terms = TermCollection().fetch_with_filter("project", id_project)
 
-            if matches:
-                try:
-                    lst = [tuple(map(float, m.split())) for m in matches]
+        for term in terms[:218]: # we do not want the coming labels which do not correspond to any musical instruments
+            d[term.id] = term.name
 
-                    poly = geometry.Polygon(lst)
-                    info = geometry.mapping(poly)
-                    coordinates = info['coordinates']
+        for image in images:
+            filename = image.originalFilename
 
-                    x_min, y_min = coordinates[0][0]
-                    x_max, y_max = coordinates[0][2]
-                    coordinates = str([int(x_min),int(y_min),int(x_max),int(y_max)])
-                    coordinates = coordinates.replace(' ','')
-                    n['coordinates'] = coordinates[1:-1]+','
-                    final_df = final_df.append(n)
-                except:
-                    pass
+            try:
+                print('Dumping the Original Image from Cytomine!')
+                image.download(os.path.join(STORING_PATH, str(id_project), "{originalFilename}"))
 
-        le = LabelEncoder()
-        instruments = set(final_df['Term'].tolist())
+                annotations = AnnotationCollection()
+                annotations.image = image.id
+                annotations.project = id_project
+                annotations.showWKT = True
+                annotations.showMeta = True
+                annotations.showGIS = True
+                annotations.showTerm = True
+                annotations.fetch()
 
-        with open(annotated_datasets_txt + 'project_' + id_name + '_instruments.txt', 'w') as f:
-            for item in instruments:
-                f.write("%s\n" % item)
+                for annotation in annotations:
+                    matches = pat.findall(annotation.location)
+                    bounding_box_area = annotation.area
 
-        #final_df['Term'] = le.fit_transform(final_df.Term.values.astype(str))
+                    print('Dumping the Crop of the Instrument')
+                    annotation.dump(dest_pattern=os.path.join(CROPS_PATH, "{project}", "crop", "{id}.jpg"))
 
-        del final_df['Id']
-        del final_df['Image Id']
-        del final_df['Y']
-        final_df['Image Filename'] = IMAGES_PATH + final_df['Image Filename'].astype(str)
-        col1 = 'Term'
-        col2 = 'coordinates'
-        final_df = final_df[[col1 if col == col2 else col2 if col == col1 else col for col in final_df.columns]]
+                    if matches:
+                        instrument_name = d[annotation.term[0]]
 
-        #final_df["merged"] = final_df["coordinates"].map(str) + final_df["Term"].map(str)
-        #del final_df['coordinates']
-        #del final_df['Term']
+                        lst = [tuple(map(float, m.split())) for m in matches]
 
-        final_df['Image Filename'] = final_df['Image Filename'].str.replace(" ","")
+                        poly = geometry.Polygon(lst)
+                        info = geometry.mapping(poly)
+                        coordinates = info['coordinates']
+                        x_min, y_min = coordinates[0][0]
+                        x_max, y_max = coordinates[0][2]
+                        coordinates = str([int(x_min),int(y_min),int(x_max),int(y_max)])
+                        coordinates = coordinates.replace(' ','')
+                        print('Bounding Box coordinates:', coordinates[1:-1]+','+ instrument_name)
+                        print('Area of the Bounding Box: ', bounding_box_area)
+                        time.sleep(0.2)
+                print('------------------')
 
-        final_df.to_csv(annotated_datasets_csv + 'full_dataset_' + id_name + '.csv', index=False)
-        final_df.to_csv(annotated_datasets_txt + 'tmp_dataset_' + id_name + '.txt', index=False, sep=' ')
+            except:
+                """ 
+                This is an error coming from Cytomine which we can pass
+                """
+                pass
 
-        training_set, testing_set = train_test_split(final_df, test_size=0.2)
-        training_set.to_csv(annotated_datasets_csv + 'dataset_' + id_name + '_training_set.csv', index=False)
-        testing_set.to_csv(annotated_datasets_csv + 'dataset_' + id_name + '_testing_set.csv', index=False)
-
-        training_set.to_csv(annotated_datasets_txt + 'dataset_' + id_name + '_training_set.txt', index=False, sep=' ')
-        testing_set.to_csv(annotated_datasets_txt + 'dataset_' + id_name + '_testing_set.txt', index=False, sep = ' ')
-
-        with open(annotated_datasets_txt + 'tmp_dataset_' + id_name + '.txt', 'r') as f, open(annotated_datasets_txt +
-                                                                                              '/full_dataset_' + id_name + '.txt', 'w') as fo:
-            for line in f:
-                fo.write(line.replace('"', '').replace("'", ""))
