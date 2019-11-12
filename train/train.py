@@ -121,7 +121,7 @@ def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_name', type=str)
     parser.add_argument('--training_annotations_path', type=str)
-    parser.add_argument('--validation_annotations_path', type=str))
+    parser.add_argument('--validation_annotations_path', type=str)
     parser.add_argument('--log_dir', type=str)
     parser.add_argument('--classes_path', type=str)
     parser.add_argument('--anchors_path', type=str)
@@ -175,11 +175,11 @@ def _main():
             'yolo_loss': lambda y_true, y_pred: y_pred})
 
         batch_size = 64
-        print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
+        print('Train on {} samples, val on {} samples, with batch size {}.'.format(len(training_lines), len(validation_lines), batch_size))
         model.fit_generator(data_generator_wrapper(training_lines, batch_size, input_shape, anchors, num_classes),
-                steps_per_epoch=max(1, num_train//batch_size),
+                steps_per_epoch=max(1, len(training_lines)//batch_size),
                 validation_data=data_generator_wrapper(validation_lines, batch_size, input_shape, anchors, num_classes),
-                validation_steps=max(1, num_val//batch_size),
+                validation_steps=max(1, len(validation_lines)//batch_size),
 		epochs=100,
                 verbose=1,
                 initial_epoch=0,
@@ -194,11 +194,11 @@ def _main():
         print('Unfreeze all of the layers.')
 
         batch_size = 32 # note that more GPU memory is required after unfreezing the body
-        print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
+        print('Train on {} samples, val on {} samples, with batch size {}.'.format(len(training_lines), len(validation_lines), batch_size))
         model.fit_generator(data_generator_wrapper(training_lines, batch_size, input_shape, anchors, num_classes),
-            steps_per_epoch=max(1, num_train//batch_size),
+            steps_per_epoch=max(1, len(training_lines)//batch_size),
             validation_data=data_generator_wrapper(validation_lines, batch_size, input_shape, anchors, num_classes),
-            validation_steps=max(1, num_val//batch_size),
+            validation_steps=max(1, len(validation_lines)//batch_size),
             epochs=100,
             initial_epoch=1,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
