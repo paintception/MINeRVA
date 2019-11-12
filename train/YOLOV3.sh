@@ -9,11 +9,12 @@ source activate yad2k
 KERAS_BACKEND=tensorflow
 export HDF5_USE_FILE_LOCKING=FALSE
 
-dataset_name='TinyMusicInArt'
-annotations_path='../annotated_datasets/CSV/MusicInArt/dataset_splits/Alan/tiny_dataset_Alan_training_set.txt'
-log_dir='../logs/'
-classes_path='../annotated_datasets/CSV/MusicInArt/instruments_list/tiny_version_list_of_instruments.txt'
-anchors_path='../annotated_datasets/CSV/MusicInArt/Anchors/tiny_version_full_yolo_yolo_anchors.txt'
+dataset_name='MusicInArt'
+training_annotations_path='/home/msabatelli/art_detector/MusicInArt/yolo_splits/final_training_set.txt'
+validation_annotations_path='/home/msabatelli/art_detector/MusicInArt/yolo_splits/final_validation_set.txt'
+log_dir='../logs/final_yolo/'
+classes_path='/home/msabatelli/art_detector/MusicInArt/yolo_splits/list_of_instruments.txt'
+anchors_path='/home/msabatelli/art_detector/MusicInArt/Anchors/MIA_full_yolo_full_yolo_yolo_anchors.txt'
 bayesian=false
 
-python train.py --dataset_name $dataset_name --annotations_path $annotations_path --log_dir $log_dir --classes_path $classes_path --anchors_path $anchors_path --bayesian $bayesian
+python train.py --dataset_name $dataset_name --training_annotations_path $training_annotations_path --validation_annotations_path $validation_annotations_path --log_dir $log_dir --classes_path $classes_path --anchors_path $anchors_path --bayesian $bayesian
