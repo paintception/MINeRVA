@@ -20,10 +20,10 @@ import os
 
 class YOLO(object):
     _defaults = {
-        "model_path": '../logs/TinyMusicInArtfrozen_model_weights.h5',
-        "anchors_path": '../annotated_datasets/CSV/MusicInArt/Anchors/tiny_version_full_yolo_yolo_anchors.txt',
-        "classes_path":'../annotated_datasets/CSV/MusicInArt/instruments_list/tiny_version_list_of_instruments.txt',
-        "score" : 0.1,
+        "model_path": './minerva_weights/top5/top5_fine_tuned_weights.h5',
+        "anchors_path": '../anchors/minerva_anchors.txt',
+        "classes_path":'../classes_to_detect/list_of_top5_instruments.txt',
+        "score" : 0.05,
         "iou" : 0.45,
         "model_image_size" : (416, 416),
         "gpu_num" : 1,
@@ -68,19 +68,7 @@ class YOLO(object):
         is_tiny_version = num_anchors==6 # default setting
 
         self.yolo_model = yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-        self.yolo_model.load_weights('../logs/TinyMusicInArtfrozen_model_weights.h5')
-
-        """ 
-        except:
-            self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
-                if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-            self.yolo_model.load_weights('./logs/trained_weights_stage_0.h5') # make sure model, anchors and classes match
-            print('LOADED')
-        else:
-            assert self.yolo_model.layers[-1].output_shape[-1] == \
-                num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
-                'Mismatch between model and given anchor and class sizes'
-        """
+        self.yolo_model.load_weights('./minerva_weights/top5/top5_fine_tuned_weights.h5')
 
         print('{} model, anchors, and classes loaded.'.format(model_path))
 
@@ -105,9 +93,9 @@ class YOLO(object):
 
     def detect_image(self, image):
         """
-        A modified function which does not only show the predictions of a trained yolo model but also
-        returns all the information that is necessary for computing the mAP wrt ground truth files.
-        We now deal with multiple predictions on the same image.
+        A function which returns the predictions of a trained yolo model together with
+        all the information that is necessary for computing the mAP scores wrt the ground truth files.
+        We also return the original image with a bounding-box drawn on it if it exists.
 
         :param image: an image coming from the testing-set
         :return: the predicted_class, x_min, y_min, x_max, y_max and an image with the drawn bounding-boxes
