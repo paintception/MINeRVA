@@ -12,7 +12,7 @@ and [qqwweee](https://github.com/qqwweee) for their wonderful open-source implem
 YOLO-V3 object detectors. We directly refer to these two repositories which have both served as more 
 than a solid start for the work presented in our paper.
 
-* [YAD2k](https://github.com/allanzelener/YAD2K)
+* [YAD2K](https://github.com/allanzelener/YAD2K)
 * [keras-yolo3](https://github.com/qqwweee/keras-yolo3)
 
 
