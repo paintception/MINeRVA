@@ -71,4 +71,11 @@ introduced in the paper.
 ![alt text](https://github.com/paintception/MINeRVA/blob/master/images/detections_examples.jpg)
 
 ### License:
-The code is distributed under a Creative Commons (CC-BY) licence. Please cite the original paper when using, repurposing or expanding data and/or code.
+This work is licensed under a [Creative Commons Attribution 4.0 International
+License][cc-by]. Please cite the original paper when using, repurposing or expanding data and/or code.
+
+[![CC BY 4.0][cc-by-image]][cc-by]
+
+[cc-by]: http://creativecommons.org/licenses/by/4.0/
+[cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
+[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
