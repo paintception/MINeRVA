@@ -57,7 +57,7 @@ def map_images(data_path, splits_path, part, save_path, crop=True):
             continue
 
         if min(x_min, y_min) < 0 and crop:
-            # annotation is corrupted
+            print(f"The annotation is corrupted {x_min} and {x_min}:", file_name)
             continue
 
         if crop:
@@ -71,7 +71,7 @@ def map_images(data_path, splits_path, part, save_path, crop=True):
         if not os.path.isdir(class_path):
             os.makedirs(class_path)
 
-        cropped.save(jp(class_path, file_name))
+        cropped.save(jp(class_path, str(row[0]) + '_' + file_name))
 
 
 if __name__ == '__main__':
