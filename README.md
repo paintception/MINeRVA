@@ -88,9 +88,9 @@ The following pre-trained models are available for fine-tuning: V3, VGG19, ResNe
 * Saliency maps: if you would like to get saliency maps for VGG19 you should run the following script 
  `python ../saliency_maps_vis.py -image /path/to/formatted/images -model /path/to/fine-tuned/model -save /path/to/save`
 
-![alt text](https://github.com/paintception/MINeRVA/blob/master/images/sal_map.jpg)
-
-
+<p align="center">
+  <img src="https://github.com/paintception/MINeRVA/blob/master/images/sal_map.jpg"/>
+</p>
 
 ### License:
 This work is licensed under a [Creative Commons Attribution 4.0 International
