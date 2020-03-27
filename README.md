@@ -3,7 +3,7 @@
 
 ### Scope
 This repository contains all the code that can be used to replicate the results presented in the [journal paper]() 
-> Matthia Sabatelli, Nicolae Banari, Marie Cocriamont, Eva Coudyzer, Karine Lasaracina, Walter Daelemans, Pierre Geurts & Mike Kestemont, "Advances in Digital Music Iconography. Benchmarking the detection of musical instruments in unrestricted, non-photorealistic images from the artistic domain". *Digital Humanities Quarterly* (2020).
+> Matthia Sabatelli, Nikolay Banar, Marie Cocriamont, Eva Coudyzer, Karine Lasaracina, Walter Daelemans, Pierre Geurts & Mike Kestemont, "Advances in Digital Music Iconography. Benchmarking the detection of musical instruments in unrestricted, non-photorealistic images from the artistic domain". *Digital Humanities Quarterly* (2020).
 
 ![alt text](https://github.com/paintception/MINeRVA/blob/master/images/readme_img.png)
 
@@ -16,7 +16,7 @@ than a solid start for the work presented in our paper.
 * [keras-yolo3](https://github.com/qqwweee/keras-yolo3)
 
 
-### Codebase:
+### Detection:
 
 * Data formatting: the official dataset splits which you can download from [here]() come in the form of the following table
     ```  
@@ -69,6 +69,22 @@ introduced in the paper.
     in the second row of the following figure.
 
 ![alt text](https://github.com/paintception/MINeRVA/blob/master/images/detections_examples.jpg)
+
+### Classification:
+* The code related to classification part is stored in `python ./classification_of_crops/`
+* Data formatting: in order to train the classifier we need to extract the bounding-box from the image and format it to 
+    the specific size. Run the following script to do this:  `python ../cut_images.py -data /path/to/raw/images -splits /path/to/splits -save /path/to/save`. 
+    This path `/path/to/splits` must contain 3 files:`train.txt`, `dev.txt` and `test.txt`.  In addition, the script will make one separate path for each class in the corresponding train/dev/test path.
+    
+![alt text](https://github.com/paintception/MINeRVA/blob/master/images/classification.png)
+    
+* Training:  the pre-trained models will be stored in `../ECCVModels/`. 
+The following pre-trained models are available for fine-tuning: V3, VGG19, ResNet. Run the following script to fine-tune the model of your choice :
+`python ../train_and_predict.py -data /path/to/formatted/data -model_path /path/to/pretrained/model -net name_of_network -save /path/to/save -lr learning_rate`
+* Testing: if you would like to **test** an already fine-tuned classifier you should run the following script
+`python ../train_and_predict.py -data /path/to/formatted/data -model /path/to/fine-tuned/model `
+
+
 
 ### License:
 This work is licensed under a [Creative Commons Attribution 4.0 International
