@@ -1,14 +1,8 @@
 import os
-# import tensorflow as tf
-# import keras.backend as K
-# from saliency_maps import visualize_filters
-
-# from keras.applications.vgg19 import VGG19, preprocess_input, decode_predictions
 from keras.preprocessing import image as Image
 from visual_backprop import VisualBackprop
 import numpy as np
 from matplotlib import pyplot as plt
-# import glob
 
 from keras.models import load_model
 
@@ -83,36 +77,6 @@ if __name__ == '__main__':
     mask = visual_bprop.get_mask(x[0])
     show_image(mask, ax=plt.subplot('121'), title='Saliency Map from a trained model')
 
-    # p = os.path.join("./viz_results/granular/VGG19/", inst)
-    #
-    # if not os.path.exists(p):
-    #     os.makedirs(p)
 
-    # plt.show()
     plt.savefig(os.path.join(args.save, file_name))
 
-    # for im_path in glob.glob('./data/granular/test/*/*.jpg'):
-    #     file_name = os.path.basename(im_path)
-    #     inst = os.path.basename(os.path.dirname(im_path))
-    #     # print(im_path)
-    #     image = get_image(im_path)
-    #
-    #     show_image(image, ax=plt.subplot('120'), grayscale=False, title='Original Image')
-    #
-    #     x = np.expand_dims(image, axis=0)
-    #
-    #     visual_bprop = VisualBackprop(model)
-    #
-    #     #
-    #     # visualize_filters.visualize_layer(model, 'block1_conv2')
-    #
-    #     mask = visual_bprop.get_mask(x[0])
-    #     show_image(mask, ax=plt.subplot('121'), title='Saliency Map from a trained model')
-    #
-    #     p = os.path.join("./viz_results/granular/VGG19/", inst)
-    #
-    #     if not os.path.exists(p):
-    #         os.makedirs(p)
-    #
-    #     # plt.show()
-    #     plt.savefig(os.path.join(p, file_name))
