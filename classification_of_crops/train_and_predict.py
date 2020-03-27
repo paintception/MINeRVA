@@ -7,20 +7,31 @@ from keras.callbacks import CSVLogger, EarlyStopping
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 import pickle
 from keras.optimizers import Adam
-
+import argparse
 import numpy as np
 
 
-def run_experiment(net_name, dataset):
+def arguments():
+    parser = argparse.ArgumentParser(description='CharNMT arguments')
+
+    parser.add_argument('-data', type=str, help='path to data', default=None)
+    parser.add_argument('-model_path', type=str, help='path where the model is', default=None)
+    parser.add_argument('-net', type=str, help='ResNet or V3 or VGG19', default=None)
+    parser.add_argument('-save', type=str, help='path to save results', default=None)
+    parser.add_argument('-lr', type=float, help='learning rate', default=None)
+
+    return parser.parse_args()
+
+
+def run_experiment(model_path, net_name, data_path, results_path, lr=0.0001):
     nb_epochs = 200  # adjust the number of epochs
-    results_path = f'./results_up/{dataset}/{net_name}/'
+    # results_path = f'./results_up/{data_path}/{net_name}/'
 
     if not os.path.exists(results_path):
         os.makedirs(results_path)
 
-    data_generator = utils.BalancedGenerator(images_path=f'./data/{dataset}/', batch_size=32)
-
-    csv_logger_callback = CSVLogger(results_path + 'results_file.csv', append=True, separator=';')
+    data_generator = utils.DataGenerator(images_path=data_path, batch_size=32)
+    csv_logger_callback = CSVLogger(os.path.join(results_path, 'results_file.csv'), append=True, separator=';')
     early_stopping_callback = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto',
                                             restore_best_weights=True
                                             )
@@ -32,13 +43,13 @@ def run_experiment(net_name, dataset):
     print("Classes:", test_generator.class_indices)
     print("Number of examples:", train_generator.n)
 
-    pre_trained_model = utils.get_pre_trained_model(net_name=net_name)
+    pre_trained_model = utils.get_pre_trained_model(model_path, net_name)
     pre_trained_output = pre_trained_model.output
 
     predictions = Dense(len(test_generator.class_indices), activation=tf.nn.softmax, name='final_output')(
         pre_trained_output)
     model = Model(input=pre_trained_model.input, output=predictions)
-    adam = Adam(0.0001)
+    adam = Adam(lr)
 
     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
@@ -62,15 +73,13 @@ def run_experiment(net_name, dataset):
     results = {'accuracy': accuracy, 'f1_macro': f1_macro, 'f1_micro': f1_micro, 'error_matrix': error_matrix,
                'class_indices': test_generator.class_indices}
 
-    with open(results_path + 'results.pickle', 'wb') as handle:
+    with open(os.path.join(results_path, 'results.pickle'), 'wb') as handle:
         pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    model.save(results_path + 'model.h5')
-    model.save_weights(results_path + 'weights.h5')
+    model.save(os.path.join(results_path, 'model.h5'))
+    model.save_weights(os.path.join(results_path, 'weights.h5'))
 
 
 if __name__ == "__main__":
-
-    for net in ['ResNet', 'V3', 'VGG19']:
-        for data_name in ['top5', 'top10', 'top20', 'all', 'granular', 'source']:
-            run_experiment(net, data_name)
+    args = arguments()
+    run_experiment(model_path=args.model_path, net_name=args.net, data_path=args.data, results_path=args.save, lr=args.lr)

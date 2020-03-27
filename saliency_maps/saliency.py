@@ -16,8 +16,10 @@
 import numpy as np
 import keras.backend as K
 
+
 class SaliencyMask(object):
     """Base class for saliency masks. Alone, this class doesn't do anything."""
+
     def __init__(self, model, output_index=0):
         """Constructs a SaliencyMask.
 
@@ -52,14 +54,15 @@ class SaliencyMask(object):
 
         return total_gradients / nsamples
 
+
 class GradientSaliency(SaliencyMask):
     r"""A SaliencyMask class that computes saliency masks with a gradient."""
 
     def __init__(self, model, output_index=0):
         # Define the function to compute the gradient
-        input_tensors = [model.input,        # placeholder for input image tensor
-                         K.learning_phase(), # placeholder for mode (train or test) tense
-                        ]
+        input_tensors = [model.input,  # placeholder for input image tensor
+                         K.learning_phase(),  # placeholder for mode (train or test) tense
+                         ]
         gradients = model.optimizer.get_gradients(model.output[0][output_index], model.input)
         self.compute_gradients = K.function(inputs=input_tensors, outputs=gradients)
 
@@ -69,7 +72,7 @@ class GradientSaliency(SaliencyMask):
         Args:
             input_image: input image with shape (H, W, 3).
         """
-        
+
         # Execute the function to compute the gradient
         x_value = np.expand_dims(input_image, axis=0)
         gradients = self.compute_gradients([x_value, 0])[0][0]
