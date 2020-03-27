@@ -71,18 +71,24 @@ introduced in the paper.
 ![alt text](https://github.com/paintception/MINeRVA/blob/master/images/detections_examples.jpg)
 
 ### Classification:
-* The code related to classification part is stored in `python ./classification_of_crops/`
+* The code related to classification part is stored in `./classification_of_crops/`
 * Data formatting: in order to train the classifier we need to extract the bounding-box from the image and format it to 
     the specific size. Run the following script to do this:  `python ../cut_images.py -data /path/to/raw/images -splits /path/to/splits -save /path/to/save`. 
-    This path `/path/to/splits` must contain 3 files:`train.txt`, `dev.txt` and `test.txt`.  In addition, the script will make one separate path for each class in the corresponding train/dev/test path.
+    This path `/path/to/splits` must contain 3 files:`train.txt`, `dev.txt` and `test.txt`.  In addition, the script will make one separate path for each class in the corresponding train/dev/test path. 
+    You will find the images similar to ones presented in the following figure.
     
 ![alt text](https://github.com/paintception/MINeRVA/blob/master/images/classification.png)
     
 * Training:  the pre-trained models will be stored in `../ECCVModels/`. 
 The following pre-trained models are available for fine-tuning: V3, VGG19, ResNet. Run the following script to fine-tune the model of your choice :
-`python ../train_and_predict.py -data /path/to/formatted/data -model_path /path/to/pretrained/model -net name_of_network -save /path/to/save -lr learning_rate`
+`python ../train_an d_predict.py -data /path/to/formatted/data -model_path /path/to/pretrained/model -net name_of_network -save /path/to/save -lr learning_rate`
 * Testing: if you would like to **test** an already fine-tuned classifier you should run the following script
 `python ../train_and_predict.py -data /path/to/formatted/data -model /path/to/fine-tuned/model `
+
+* Saliency maps: if you would like to get saliency maps for VGG19 you should run the following script 
+ `python ../saliency_maps_vis.py -image /path/to/formatted/images -model /path/to/fine-tuned/model -save /path/to/save`
+
+![alt text](https://github.com/paintception/MINeRVA/blob/master/images/sal_map.jpg)
 
 
 
