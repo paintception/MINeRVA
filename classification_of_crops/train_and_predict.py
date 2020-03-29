@@ -19,18 +19,23 @@ def arguments():
     parser.add_argument('-net', type=str, help='ResNet or V3 or VGG19', default=None)
     parser.add_argument('-save', type=str, help='path to save results', default=None)
     parser.add_argument('-lr', type=float, help='learning rate', default=None)
+    parser.add_argument("--balanced", default=False, action="store_true", help="oversampling")
 
     return parser.parse_args()
 
 
-def run_experiment(model_path, net_name, data_path, results_path, lr=0.0001):
+def run_experiment(model_path, net_name, data_path, results_path, lr=0.0001, balanced=True):
     nb_epochs = 200  # adjust the number of epochs
     # results_path = f'./results_up/{data_path}/{net_name}/'
 
     if not os.path.exists(results_path):
         os.makedirs(results_path)
 
-    data_generator = utils.DataGenerator(images_path=data_path, batch_size=32)
+    if balanced:
+        data_generator = utils.BalancedGenerator(images_path=data_path, batch_size=32)
+    else:
+        data_generator = utils.DataGenerator(images_path=data_path, batch_size=32)
+
     csv_logger_callback = CSVLogger(os.path.join(results_path, 'results_file.csv'), append=True, separator=';')
     early_stopping_callback = EarlyStopping(monitor='val_loss', min_delta=0, patience=5, verbose=0, mode='auto',
                                             restore_best_weights=True
@@ -82,4 +87,6 @@ def run_experiment(model_path, net_name, data_path, results_path, lr=0.0001):
 
 if __name__ == "__main__":
     args = arguments()
-    run_experiment(model_path=args.model_path, net_name=args.net, data_path=args.data, results_path=args.save, lr=args.lr)
+    run_experiment(model_path=args.model_path, net_name=args.net,
+                   data_path=args.data, results_path=args.save,
+                   lr=args.lr, balanced=args.balanced)

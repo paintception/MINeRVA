@@ -18,12 +18,12 @@ def arguments():
 def predict(data_path, model_path):
     model = load_model(os.path.join(model_path, 'model.h5'))
     model.load_weights(os.path.join(model_path, 'weights.h5'))
-    data_generator = utils.DataGenerator(images_path=data_path, batch_size=32)
+    data_generator = utils.BalancedGenerator(images_path=data_path, batch_size=32)
     test_generator = data_generator.get_testing_generator()
 
     output = model.predict_generator(generator=test_generator, steps=test_generator.n // test_generator.batch_size,
                                      pickle_safe=True)
-
+    print(output)
     output = np.argmax(output, axis=1)
     accuracy = accuracy_score(test_generator.classes, output)
     f1_macro = f1_score(test_generator.classes, output, average='macro')
