@@ -1,3 +1,5 @@
+[![Zenodo data deposite](https://zenodo.org/badge/DOI/10.5281/zenodo.3732580.svg)](https://zenodo.org/record/3732580#.XoRTLNMzZ24)
+
 # MINERVA
 ## Benchmarking the detection of musical instruments in unrestricted, non-photorealistic images from the artistic domain
 
@@ -94,6 +96,10 @@ The following pre-trained models are available for fine-tuning: Inception-V3, VG
 </p>
 
 ### License:
+
+All the annotated data used in this project has been officially deposited on Zenodo and is fully available there for scholarly reuse, upon explicit request:
+[![Zenodo data deposite](https://zenodo.org/badge/DOI/10.5281/zenodo.3732580.svg)](https://zenodo.org/record/3732580#.XoRTLNMzZ24)
+
 This work is licensed under a [Creative Commons Attribution 4.0 International
 License][cc-by]. Please cite the original paper when using, repurposing or expanding data and/or code.
 
