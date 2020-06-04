@@ -7,7 +7,7 @@ import argparse
 
 
 def arguments():
-    parser = argparse.ArgumentParser(description='CharNMT arguments')
+    parser = argparse.ArgumentParser(description='arguments')
 
     parser.add_argument('-data', type=str, help='path to data', default=None)
     parser.add_argument('-model', type=str, help='model', default=None)
