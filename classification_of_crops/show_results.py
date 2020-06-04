@@ -3,7 +3,7 @@ import argparse
 
 
 def arguments():
-    parser = argparse.ArgumentParser(description='CharNMT arguments')
+    parser = argparse.ArgumentParser(description='arguments')
 
     parser.add_argument('--f', type=str, help='name', default=None)
 
